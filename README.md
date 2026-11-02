@@ -1,4 +1,4 @@
-# Parallel gradient boosting
+# Sequential vs fully conditional specification for data synthesis
 
 This repository provides the source code of the experiments for the paper: [Sequential versus fully conditional specification for tree-based synthesis of health data](https://arxiv.org/abs/2610.35163).
 
