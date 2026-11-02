@@ -16,6 +16,25 @@ library("future.apply")
 library("ggpattern")
 library("randomForest")
 
+save_dir <- ""
+wd <- ""
+
+bor_cols <- function() {
+  c("#534785", "#f55f5e", "#dec91a", "#51A3A3", "#82846D", "#A1C084", "#754F5B","#27476E", "#EB9486")
+}
+
+save_plot <- function(dir, width=7, height=5.5, p = NULL) {
+  files <- list.files(path = dir, pattern = "plot[0-9]+\\.jpg", full.names = FALSE)
+  n <- as.numeric(gsub("plot([0-9]+)\\.jpg", "\\1", files))
+  if (length(n) > 0) max_n <- max(n, na.rm = TRUE)
+  else max_n <- 0
+  if(is.null(p)) p <- ggplot2::last_plot()
+  filename <- paste(dir, "/plot", max_n + 1, ".jpg", sep="")
+  ggplot2::ggsave(file = filename, plot = p,
+         width = width, height = height, dpi = 320)
+  return(filename)
+}
+
 tree_engine_includes <- '
 #include <Rcpp.h>
 #include <vector>
@@ -783,7 +802,7 @@ blood[] <- lapply(blood, function(x) if(length(unique(x[!is.na(x)])) <= 4) facto
 blood <- clean_names(blood)
 blood <- na.omit(blood)
 
-wbcd <- readRDS(here::here("../opencesp-examples/fcs/wbcd.rds"))
+wbcd <- readRDS(paste0(wd, "wbcd.rds"))
 wbcd[] <- lapply(wbcd, function(x) if(is.integer(x)) as.numeric(x) else x)
 wbcd <- na.omit(wbcd)
 
@@ -796,7 +815,7 @@ ad[] <- lapply(ad, function(x) if(is.integer(x)) as.numeric(x) else x)
 ad$male <- factor(ad$male)
 ad <- na.omit(ad)
 
-hepatitis <- readRDS(here::here("../opencesp-examples/fcs/hepatitis.rds"))
+hepatitis <- readRDS(paste0(wd, "hepatitis.rds"))
 hepatitis <- na.omit(hepatitis)
 
 df_l <- list(supra = supra, prostate = prostate, blood = blood, hepatitis = hepatitis, wbcd = wbcd, ad = ad)
@@ -1075,19 +1094,19 @@ plot_results <- function(plot_data, metric, calibrated = T) {
       breaks = method_breaks,
       labels = method_labels[method_breaks]
     ) +
-    borelli_theme() +
+    theme_minimal() +
     theme(strip.text = element_text(size = 13), legend.position = "bottom")
 }
 
 results <- do.call(rbind, result_list)
 plot_results(results, "util", F)
-save_plot(here::here("../opencesp-examples/fcs/plots"), 10.5, 5.5)
+save_plot(save_dir, 10.5, 5.5)
 plot_results(results, "util", T)
-save_plot(here::here("../opencesp-examples/fcs/plots"), 10.5, 5.5)
+save_plot(save_dir, 10.5, 5.5)
 plot_results(results, "util_marg", F)
-save_plot(here::here("../opencesp-examples/fcs/plots"), 10.5, 5.5)
+save_plot(save_dir, 10.5, 5.5)
 plot_results(results, "util_marg", T)
-save_plot(here::here("../opencesp-examples/fcs/plots"), 10.5, 5.5)
+save_plot(save_dir, 10.5, 5.5)
 
 plot_visit_sd <- function(plot_data, metric, ylabel = "") {
   plot_data$metric_sd <- plot_data[[metric]]
@@ -1190,7 +1209,7 @@ plot_visit_sd <- function(plot_data, metric, ylabel = "") {
       x = NULL,
       y = ylabel
     ) +
-    borelli_theme(show_title = T) +
+    theme_minimal() +
     theme(
       legend.title = element_text(hjust = .5),
       panel.grid.major.x = ggplot2::element_blank(),
@@ -1209,7 +1228,7 @@ p_priv <- plot_visit_sd(results, "priv", "aPMR (sd)") +
 
 (p_priv / p_util) + plot_layout(guides = "collect") & theme(legend.position = "bottom")
 
-save_plot(here::here("../opencesp-examples/fcs/plots"), 10, 5.5)
+save_plot(save_dir, 10, 5.5)
 
 
 ###################################################
@@ -1601,7 +1620,7 @@ plot_scan_results <- function(data, metric_name, model_name) {
       shape = "dataset",
       fill = "dataset"
     ) +
-    borelli_theme() +
+    theme_minimal() +
     theme(legend.position = "bottom")
 }
 
@@ -1623,7 +1642,7 @@ wrap_plots(
   )
 
 
-save_plot(here::here("../opencesp-examples/fcs/plots"), 9, 6)
+save_plot(save_dir, 9, 6)
 
 
 ###################################################
@@ -1796,10 +1815,10 @@ ggplot(c2st_results, aes(x = prop, y = statistic, colour = data_name, shape = da
     shape = "Dataset",
     fill = "Dataset"
   ) +
-  borelli_theme() +
+  theme_minimal() +
   theme(legend.position = "bottom")
 
-save_plot(here::here("../opencesp-examples/fcs/plots"), 6, 3.5)
+save_plot(save_dir, 6, 3.5)
 
 
 ###################################################
@@ -2003,7 +2022,7 @@ plot_initialization_results <- function(plot_data, metric, ylabel = "") {
       )
     ) +
     labs(x = expression(pi), y = ylabel) +
-    borelli_theme(show_title = T) +
+    theme_minimal() +
     theme(
       legend.title = element_text(hjust = .5),
       panel.grid.major.x = element_blank(),
@@ -2022,4 +2041,4 @@ p_priv <- plot_initialization_results(mean_data, "priv", "aPMR") +
 
 (p_priv / p_util) + plot_layout(guides = "collect") & theme(legend.position = "bottom")
 
-save_plot(here::here("../opencesp-examples/fcs/plots"), 10, 5)
+save_plot(save_dir, 10, 5)
